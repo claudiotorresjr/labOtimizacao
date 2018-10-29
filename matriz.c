@@ -132,7 +132,20 @@ void mt (MatRow A, MatRow B, int n)
 
 void mmm_uj (MatRow A, MatRow B, int n, MatRow C)
 {
-  
+    for (int i=0; i < n; ++i)
+    for (int j=0; j < n; ++j)
+      for (int k=0; k < n-n%UF; k+=UF)
+      {
+        MAT(C,n,i,j) += MAT(A,n,i,k) * MAT(B,n,k,j);
+        MAT(C,n,i,j) += MAT(A,n,i,k+1) * MAT(B,n,k+1,j);
+        MAT(C,n,i,j) += MAT(A,n,i,k+2) * MAT(B,n,k+2,j);
+        MAT(C,n,i,j) += MAT(A,n,i,k+3) * MAT(B,n,k+3,j);
+      }
+
+  for (int i=0; i < n; ++i)
+    for (int j=0; j < n; ++j)
+      for (int k=n-n%UF; k < n; ++k)
+        MAT(C,n,i,j) += MAT(A,n,i,k) * MAT(B,n,k,j);
 }
 
 
@@ -177,7 +190,36 @@ void mt_uj (MatRow A, MatRow B, int n)
 
 void mmm_blk (MatRow A, MatRow B, int n, int b, MatRow C)
 {
+	int NB = n/b;
+	int resto = n%b;
 
+  for (int bi = 0; bi < NB; ++bi)
+  	for (int bj = 0; bj < NB; ++bj)
+    {
+    	int iINI = bi*b;
+		int iFIM = iINI+b;
+		int jINI = bj*b;
+		int jFIM = jINI+b;
+		for (int i=iINI; i < iFIM; ++i)
+			for (int j=jINI; j < jFIM; ++j)
+				for (int k=0; k < n-n%UF; k+=UF)
+				{
+					MAT(C,n,i,j) += MAT(A,n,i,k) * MAT(B,n,k,j);
+					MAT(C,n,i,j) += MAT(A,n,i,k+1) * MAT(B,n,k+1,j);
+					MAT(C,n,i,j) += MAT(A,n,i,k+2) * MAT(B,n,k+2,j);
+					MAT(C,n,i,j) += MAT(A,n,i,k+3) * MAT(B,n,k+3,j);
+				}
+	}
+
+	for (int i = n-resto; i < n; ++i)
+    	for (int j = 0; j < n-resto; ++j)
+      		for (int k = 0; k < n; ++k)
+        		MAT(C,n,i,j) += MAT(A,n,i,k) * MAT(B,n,k,j);
+
+	for (int i = 0; i < n; ++i)
+		for (int j = n-resto; j < n; ++j)
+			for (int k = 0; k < n; ++k)
+				MAT(C,n,i,j) += MAT(A,n,i,k) * MAT(B,n,k,j);
 }
 
 
@@ -192,25 +234,33 @@ void mmm_blk (MatRow A, MatRow B, int n, int b, MatRow C)
 
 void mt_blk (MatRow A, MatRow B, int n, int b)
 {
-  int istart, iend, jstart, jend;
-  for (int ii=0; ii < n-n%b; ii+=b)
-  {
-    istart=ii; iend=ii+b;
-    for (int jj=0; jj < n-n%b; jj+=b) 
-    {
-      jstart=jj;  jend=jj+b;
-      for (int i=istart; i<iend; i+=UF)
-      {
-        for (int j=jstart; j<jend; ++j)
-        {
-          MAT(A,n,i,j) = MAT(B,n,j,i);
-          MAT(A,n,i+1,j) = MAT(B,n,j+1,i);
-          MAT(A,n,i+2,j) = MAT(B,n,j+2,i);
-          MAT(A,n,i+3,j) = MAT(B,n,j+3,i);
-        }
-      }
-    }
-  }
+    int NB = n/b;
+    int resto = n%b;
+
+	for (int bi = 0; bi < NB; ++bi)
+		for (int bj = 0; bj < NB; ++bj)
+		{
+			int iINI = bi*b;
+			int iFIM = iINI+b;
+			int jINI = bj*b;
+			int jFIM = jINI+b;
+			for (int i = iINI; i < iFIM-iFIM%UF; i+=UF)
+				for (int j = jINI; j < jFIM; ++j)
+				{
+					MAT(A,n,i,j) = MAT(B,n,j,i);
+					MAT(A,n,i+1,j) = MAT(B,n,j,i+1);
+					MAT(A,n,i+2,j) = MAT(B,n,j,i+2);
+					MAT(A,n,i+3,j) = MAT(B,n,j,i+3);
+				}
+		}
+
+	for (int i = n-resto; i < n; ++i)
+		for (int j = 0; j < n-resto; ++j)
+			MAT(A,n,i,j) = MAT(B,n,j,i);
+
+	for (int i = 0; i < n; ++i)
+		for (int j = n-resto; j < n; ++j)
+			MAT(A,n,i,j) = MAT(B,n,j,i);
 }
 
 /**
